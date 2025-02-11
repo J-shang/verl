@@ -38,11 +38,11 @@ dependencies = [
     "numpy",
     "pybind11",
     "ray>=2.38",
-    "tensordict",
+    "tensordict<0.6",
     "transformers<4.48",
     "vllm<=0.6.3",
     "peft",
-    "liger-kernel",
+#    "liger-kernel",
 ]
 
 # Optional dependencies (extras_require in setup.py)
