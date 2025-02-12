@@ -45,6 +45,7 @@ dependencies = [
 #    "liger-kernel",
     "latex2sympy2",
     "word2number",
+    "wandb",
 ]
 
 # Optional dependencies (extras_require in setup.py)
