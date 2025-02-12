@@ -1,5 +1,10 @@
 set -x
 
+# # on master node
+# ray start --head
+# # on worker node
+# ray start --address='xxx:6379'
+
 train_files="['/scratch/nishang/verl/data/simplerl_example_data/train.parquet']"
 test_files="['/scratch/nishang/verl/data/simplerl_example_data/test.parquet']"
 
