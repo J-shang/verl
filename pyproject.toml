@@ -38,11 +38,13 @@ dependencies = [
     "numpy",
     "pybind11",
     "ray>=2.38",
-    "tensordict<0.6",
+    "tensordict",
     "transformers<4.48",
     "vllm<=0.6.3",
     "peft",
 #    "liger-kernel",
+    "latex2sympy2",
+    "word2number",
 ]
 
 # Optional dependencies (extras_require in setup.py)
