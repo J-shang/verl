@@ -21,6 +21,28 @@ from verl.utils.reward_score import gsm8k, math, qwen_math_eval_toolkit
 from verl.trainer.ppo.ray_trainer import RayPPOTrainer
 
 
+# timeout must be used for compute score for now, or it may hang
+import signal
+
+class TimeoutException(Exception):
+    pass
+
+def timeout_handler(signum, frame):
+    raise TimeoutException()
+
+def run_with_timeout(func, timeout, *args, **kwargs):
+    signal.signal(signal.SIGALRM, timeout_handler)
+    signal.alarm(timeout)
+
+    try:
+        return func(*args, **kwargs)
+    except TimeoutException:
+        print("Function timed out.")
+        return None
+    finally:
+        signal.alarm(0)
+
+
 def _default_compute_score(data_source, solution_str, ground_truth):
     if data_source == 'openai/gsm8k':
         return gsm8k.compute_score(solution_str, ground_truth)
@@ -72,11 +94,23 @@ class RewardManager():
 
             data_source = data_item.non_tensor_batch['data_source']
 
-            score = self.compute_score(
-                data_source=data_source,
-                solution_str=sequences_str,
-                ground_truth=ground_truth,
-            )
+            # score = self.compute_score(
+            #     data_source=data_source,
+            #     solution_str=sequences_str,
+            #     ground_truth=ground_truth,
+            # )
+            
+            # add a timeout for compute_score, to prevent hang
+            # print(f"Index {i}:\nsequences_str\n{sequences_str}\nground_truth\n{ground_truth}", flush=True)
+            score = run_with_timeout(
+                        self.compute_score,
+                        timeout=1,
+                        data_source=data_source,
+                        solution_str=sequences_str,
+                        ground_truth=ground_truth,)
+            # if the score is None, means the compute_score is time out, then give it a -1.0 score
+            score = score if score is not None else -1.0
+
             reward_tensor[i, valid_response_length - 1] = score
 
             if data_source not in already_print_data_sources:
