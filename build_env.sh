@@ -10,6 +10,7 @@ conda activate verl
 pip install ray==2.38.0
 
 pip uninstall -y vllm
+export CCACHE_DIR=/scratch/nishang/ccahe
 git clone https://github.com/vllm-project/vllm.git && cd vllm && git checkout v0.6.3 && python setup.py develop && cd ..
 
 git clone https://github.com/pytorch/tensordict.git && cd tensordict && pip install . && cd ..
