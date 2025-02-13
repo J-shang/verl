@@ -37,7 +37,7 @@ def run_with_timeout(func, timeout, *args, **kwargs):
     try:
         return func(*args, **kwargs)
     except TimeoutException:
-        print("Function timed out.")
+        print("Function timed out.", flush=True)
         return None
     finally:
         signal.alarm(0)
