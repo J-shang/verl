@@ -17,7 +17,7 @@ Note that we don't combine the main with ray_trainer as ray_trainer is used by o
 
 from verl import DataProto
 import torch
-from verl.utils.reward_score import gsm8k, math, qwen_math_eval_toolkit
+from verl.utils.reward_score import gsm8k, math, qwen_math_eval_toolkit, mario_eval
 from verl.trainer.ppo.ray_trainer import RayPPOTrainer
 
 
@@ -49,7 +49,8 @@ def _default_compute_score(data_source, solution_str, ground_truth):
     elif data_source in ['lighteval/MATH', 'DigitalLearningGmbH/MATH-lighteval']:
         return math.compute_score(solution_str, ground_truth)
     else:
-        return qwen_math_eval_toolkit.compute_score(solution_str, ground_truth)
+        return mario_eval.compute_score(solution_str, ground_truth)
+        # return qwen_math_eval_toolkit.compute_score(solution_str, ground_truth)
 
 
 class RewardManager():
@@ -94,22 +95,22 @@ class RewardManager():
 
             data_source = data_item.non_tensor_batch['data_source']
 
-            # score = self.compute_score(
-            #     data_source=data_source,
-            #     solution_str=sequences_str,
-            #     ground_truth=ground_truth,
-            # )
+            score = self.compute_score(
+                data_source=data_source,
+                solution_str=sequences_str,
+                ground_truth=ground_truth,
+            )
             
             # add a timeout for compute_score, to prevent hang
             # print(f"Index {i}:\nsequences_str\n{sequences_str}\nground_truth\n{ground_truth}", flush=True)
-            score = run_with_timeout(
-                        self.compute_score,
-                        timeout=1,
-                        data_source=data_source,
-                        solution_str=sequences_str,
-                        ground_truth=ground_truth,)
-            # if the score is None, means the compute_score is time out, then give it a -1.0 score
-            score = score if score is not None else -1.0
+            # score = run_with_timeout(
+            #             self.compute_score,
+            #             timeout=1,
+            #             data_source=data_source,
+            #             solution_str=sequences_str,
+            #             ground_truth=ground_truth,)
+            # # if the score is None, means the compute_score is time out, then give it a -1.0 score
+            # score = score if score is not None else -1.0
 
             reward_tensor[i, valid_response_length - 1] = score
 
@@ -208,7 +209,7 @@ def main_task(config, compute_score=None):
         role_worker_mapping[Role.RewardModel] = ray.remote(RewardModelWorker)
         mapping[Role.RewardModel] = global_pool_id
 
-    reward_fn = RewardManager(tokenizer=tokenizer, num_examine=0, compute_score=compute_score)
+    reward_fn = RewardManager(tokenizer=tokenizer, num_examine=1, compute_score=compute_score)
 
     # Note that we always use function-based RM for validation
     val_reward_fn = RewardManager(tokenizer=tokenizer, num_examine=1, compute_score=compute_score)

@@ -70,11 +70,13 @@ def main(config):
     dp_size = wg.world_size // config.rollout.tensor_model_parallel_size
     num_batch = (total_samples // config_batch_size) + 1
     output_lst = [[] for _ in range(config.data.n_samples)]
+    chat_template = config.data.get('chat_template_type', None)
 
     for batch_idx in range(num_batch):
         print(f'[{batch_idx+1}/{num_batch}] Start to process.')
         batch_chat_lst = chat_lst[batch_idx * config_batch_size:(batch_idx + 1) * config_batch_size]
         inputs = tokenizer.apply_chat_template(batch_chat_lst,
+                                               chat_template=chat_template,
                                                add_generation_prompt=True,
                                                padding=True,
                                                truncation=True,

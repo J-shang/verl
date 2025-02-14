@@ -38,6 +38,7 @@ from verl.utils.model import compute_position_id_with_mask
 from verl.utils.flops_counter import FlopsCounter
 from verl.utils.checkpoint.fsdp_checkpoint_manager import FSDPCheckpointManager
 from verl.workers.sharding_manager.fsdp_ulysses import FSDPUlyssesShardingManager
+from verl.utils.dataset.chat_template import get_chat_template
 
 from codetiming import Timer
 
@@ -886,6 +887,8 @@ class RewardModelWorker(Worker):
             self.config.micro_batch_size //= torch.distributed.get_world_size()
             self.config.micro_batch_size_per_gpu = self.config.micro_batch_size
 
+        self.chat_template = get_chat_template(self.config.data.get('chat_template_type', None))
+
     def _build_model(self, config):
         # the following line is necessary
         from transformers import AutoModelForTokenClassification, AutoConfig
@@ -1051,7 +1054,8 @@ class RewardModelWorker(Worker):
 
             prompt_with_chat_template = target_tokenizer.apply_chat_template(chat,
                                                                              add_generation_prompt=False,
-                                                                             tokenize=False)
+                                                                             tokenize=False,
+                                                                             chat_template=self.chat_template)
             if self.rank == 0 and i == 0:
                 # for debugging purpose
                 print(f'Switch template. chat: {prompt_with_chat_template}')
