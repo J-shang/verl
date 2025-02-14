@@ -43,6 +43,6 @@ RAY_EXPERIMENTAL_NOSET_ROCR_VISIBLE_DEVICES=0 python3 -m verl.trainer.main_ppo \
     trainer.experiment_name='Qwen2.5-Math-14B-OpenR1-Math-Default-94k-PPO' \
     trainer.n_gpus_per_node=8 \
     trainer.nnodes=1 \
-    trainer.save_freq=4 \
+    trainer.save_freq=10 \
     trainer.test_freq=-1 \
     trainer.total_epochs=20 $@
