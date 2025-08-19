@@ -74,8 +74,8 @@ class SimJupyterTool(BaseTool):
             },
             "history_tool_calls": self._instance_dict[instance_id]["history_tool_calls"]
         }
-        result = await self.request_processor.send_request(tool_call)
-        pass
+        result_text = await self.request_processor.send_request(tool_call)
+        return ToolResponse(text=result_text), 0.0, {}
 
     async def calc_reward(self, instance_id: str, **kwargs) -> str:
         return self._instance_dict[instance_id]["reward"]
