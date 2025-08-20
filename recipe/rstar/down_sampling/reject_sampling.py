@@ -30,9 +30,11 @@ def reject_equal_reward(batch: DataProto, do_sample=True, world_size=None):
             solve_equal_non_all_zeros += 1
 
     metrics = {}
-    metrics['batch/solve_equal'] = solve_equal
-    metrics['batch/reward_all_zeros'] = solve_equal_zeros
-    metrics['batch/reward_non_all_zeros'] = solve_equal_non_all_zeros
+    metrics['reject_equal_reward/solve_non_equal_total'] = len(batch) - solve_equal
+    metrics['reject_equal_reward/solve_equal_total'] = solve_equal
+    metrics['reject_equal_reward/solve_equal_total_ratio'] = solve_equal / len(batch) if len(batch) > 0 else 0
+    metrics['reject_equal_reward/solve_equal_zeros'] = solve_equal_zeros
+    metrics['reject_equal_reward/solve_equal_non_all_zeros'] = solve_equal_non_all_zeros
 
     if do_sample:
         if not valid_mask.any():
@@ -40,4 +42,3 @@ def reject_equal_reward(batch: DataProto, do_sample=True, world_size=None):
         batch = filter_by_mask(batch, valid_mask, world_size)
         if batch is None:
             return None, metrics
-        

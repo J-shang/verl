@@ -1,3 +1,7 @@
+"""
+The only different of this file and the verl/trainer/main_ppo.py is the usage of RStarRayTrainer instead of RayPPOTrainer.
+"""
+
 import os
 import socket
 
@@ -7,9 +11,10 @@ from omegaconf import OmegaConf
 
 from verl.trainer.constants_ppo import get_ppo_ray_runtime_env
 from verl.trainer.main_ppo import create_rl_dataset, create_rl_sampler
-from verl.trainer.ppo.ray_trainer import RayPPOTrainer
 from verl.trainer.ppo.reward import load_reward_manager
 from verl.utils.device import is_cuda_available
+
+from .rstar_ray_trainer import RStarRayTrainer
 
 
 @hydra.main(config_path="config", config_name="rstar_trainer", version_base=None)
@@ -243,8 +248,8 @@ class TaskRunner:
         val_dataset = create_rl_dataset(config.data.val_files, config.data, tokenizer, processor, is_train=False)
         train_sampler = create_rl_sampler(config.data, train_dataset)
 
-        # Initialize the PPO trainer.
-        trainer = RayPPOTrainer(
+        # Initialize the rstar PPO trainer.
+        trainer = RStarRayTrainer(
             config=config,
             tokenizer=tokenizer,
             processor=processor,

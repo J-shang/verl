@@ -24,3 +24,7 @@ actor_rollout_ref:
       tool_config_path: "./config/tool_config/jupyter_tool_config.yaml"
     agent:
       num_workers: 1
+    augmentation:
+      do_down_sampling: True
+      down_sampling_config:
+        reject_equal_reward: True
