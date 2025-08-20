@@ -42,3 +42,7 @@ def reject_equal_reward(batch: DataProto, do_sample=True, world_size=None):
         batch = filter_by_mask(batch, valid_mask, world_size)
         if batch is None:
             return None, metrics
+        else:
+            return batch, metrics
+    else:
+        return None, metrics

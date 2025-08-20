@@ -2,19 +2,9 @@ import torch
 from verl.protocol import DataProto, DataProtoItem
 
 
-def dataprotoitem_to_dataproto(item: DataProtoItem) -> DataProto:
-    """Convert a DataProtoItem to a DataProto object"""
-    return DataProto.from_dict(
-        tensors=item.batch,  # TensorDict is already in correct format
-        non_tensors=item.non_tensor_batch,  # Dict is already in correct format 
-        meta_info=item.meta_info
-    )
-
-
 def filter_by_mask(batch: DataProto, mask: torch.Tensor, num_trainer_replicas: int) -> DataProto:
     # Filter batch to keep only valid samples
     batch = batch[mask]
-    batch = dataprotoitem_to_dataproto(batch)
     # Round down to the nearest multiple of world size
     max_batch_size = (batch.batch['input_ids'].shape[0] // num_trainer_replicas) * num_trainer_replicas
     if not max_batch_size:
@@ -24,5 +14,4 @@ def filter_by_mask(batch: DataProto, mask: torch.Tensor, num_trainer_replicas: i
     size_mask = torch.zeros(batch.batch['input_ids'].shape[0], dtype=torch.bool)
     size_mask[:max_batch_size] = True
     batch = batch[size_mask]
-    batch = dataprotoitem_to_dataproto(batch)
     return batch

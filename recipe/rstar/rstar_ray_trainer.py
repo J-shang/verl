@@ -32,8 +32,17 @@ from .down_sampling import reject_equal_reward
 
 class RStarRayTrainer(RayPPOTrainer):
     def _down_sample_batch(self, batch: DataProto) -> DataProto:
-        # Implement down-sampling logic here
-        return batch
+        do_down_sampling = self.config.augmentation.do_down_sampling
+        down_sampling_config = self.config.augmentation.down_sampling_config
+        world_size = self.actor_rollout_wg.world_size
+        metrics = {}
+
+        # reject rollout trace of the same prompt with equal rewards
+        do_reject_equal_reward = down_sampling_config.get("reject_equal_reward", False) and do_down_sampling
+        batch, metrics = reject_equal_reward(batch, do_reject_equal_reward, world_size)
+        metrics.update(metrics)
+
+        return batch, metrics
 
     def fit(self):
         """
@@ -194,9 +203,10 @@ class RStarRayTrainer(RayPPOTrainer):
                     # Need to refactor the launch_reward_fn_async to support down sampling,
                     # only forbid combine launch_reward_fn_async and down sampling for now.
                     with marked_timer("down_sample", timing_raw, color="yellow"):
-                        assert not (self.config.reward_model.launch_reward_fn_async and self.config.actor_rollout_ref.rollout.augmentation.do_down_sampling), \
+                        assert not (self.config.reward_model.launch_reward_fn_async and self.config.augmentation.do_down_sampling), \
                             "down sampling cannot combine with async reward function for now"
-                        batch = self._down_sample_batch(batch)
+                        batch, down_sampling_metrics = self._down_sample_batch(batch)
+                        metrics.update(down_sampling_metrics)
                     #############################################################################
 
                     ################################### rStar ###################################

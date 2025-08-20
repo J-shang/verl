@@ -18,7 +18,7 @@ python3 -m recipe.rstar.main_rstar \
     data.filter_overlong_prompts=True \
     data.truncation='error' \
     data.return_raw_chat=True \
-    actor_rollout_ref.model.path=Qwen/Qwen2.5-0.5B-Instruct \
+    actor_rollout_ref.model.path=$PROJECT_DIR/../models/Qwen3-4B \
     actor_rollout_ref.actor.optim.lr=1e-6 \
     actor_rollout_ref.model.use_remove_padding=True \
     actor_rollout_ref.actor.ppo_mini_batch_size=256 \
@@ -45,7 +45,7 @@ python3 -m recipe.rstar.main_rstar \
     trainer.critic_warmup=0 \
     trainer.logger='["console", "wandb"]' \
     trainer.project_name='gsm8k_tool-agent' \
-    trainer.experiment_name='qwen2.5-0.5b_function_rm-jupyter-sgl-tool-agent-verify-n16' \
+    trainer.experiment_name='qwen3-4b_function_rm-jupyter-sgl-tool-agent-verify-n16' \
     trainer.n_gpus_per_node=2 \
     trainer.nnodes=1 \
     trainer.save_freq=-1 \
