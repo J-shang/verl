@@ -1,3 +1,5 @@
+# the rstar config will override default ppo_trainer.yaml
+
 hydra:
   searchpath:
     - file://verl/trainer/config

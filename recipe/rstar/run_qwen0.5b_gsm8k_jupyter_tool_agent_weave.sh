@@ -6,11 +6,11 @@ set -x
 ulimit -n 65535
 
 PROJECT_DIR="$(pwd)"
-CONFIG_PATH="$PROJECT_DIR/examples/sglang_multiturn/config"
+CONFIG_PATH="$PROJECT_DIR/recipe/rstar/config"
 
-python3 -m verl.trainer.main_ppo \
+python3 -m recipe.rstar.main_rstar \
     --config-path="$CONFIG_PATH" \
-    --config-name='jupyter_multiturn_grpo' \
+    --config-name='rstar_trainer' \
     algorithm.adv_estimator=grpo \
     data.train_batch_size=256 \
     data.max_prompt_length=1024 \
@@ -45,7 +45,7 @@ python3 -m verl.trainer.main_ppo \
     trainer.critic_warmup=0 \
     trainer.logger='["console", "wandb"]' \
     trainer.project_name='gsm8k_tool-agent' \
-    trainer.experiment_name='qwen2.5-0.5b_function_rm-gsm8k-sgl-tool-agent-verify-n16-jupyter' \
+    trainer.experiment_name='qwen2.5-0.5b_function_rm-jupyter-sgl-tool-agent-verify-n16' \
     trainer.n_gpus_per_node=2 \
     trainer.nnodes=1 \
     trainer.save_freq=-1 \
@@ -53,5 +53,5 @@ python3 -m verl.trainer.main_ppo \
     trainer.total_training_steps=2 \
     data.train_files=$HOME/data/gsm8k/train.parquet \
     data.val_files=$HOME/data/gsm8k/test.parquet \
-    actor_rollout_ref.rollout.multi_turn.tool_config_path="$PROJECT_DIR/examples/sglang_multiturn/config/tool_config/jupyter_tool_config.yaml" \
+    actor_rollout_ref.rollout.multi_turn.tool_config_path="$PROJECT_DIR/recipe/rstar/config/tool_config/jupyter_tool_config.yaml" \
     trainer.total_epochs=15 $@

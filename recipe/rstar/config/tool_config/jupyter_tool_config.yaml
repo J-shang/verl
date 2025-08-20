@@ -1,5 +1,5 @@
 tools:
-  - class_name: "verl.rstar.tools.sim_jupyter_tool.SimJupyterTool"
+  - class_name: "recipe.rstar.tools.sim_jupyter_tool.SimJupyterTool"
     config: 
       type: native
       request_processor_concurrency: 8
