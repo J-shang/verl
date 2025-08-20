@@ -2,6 +2,7 @@ from functools import partial
 from typing import Any, Optional, Dict, List
 from uuid import uuid4
 
+import asyncio
 import aiohttp
 import json
 
@@ -11,7 +12,6 @@ from verl.tools.schemas import OpenAIFunctionToolSchema, ToolResponse
 
 from .request_processor import RequestProcessor
 from .code_judge_utils import run_tool_calls_on_server_async
-from .sim_jupyter_tool import generate_tool_call_code, generate_tool_call_input
 
 
 class SimJupyterTool(BaseTool):
@@ -24,7 +24,7 @@ class SimJupyterTool(BaseTool):
             generate_tool_call_code=generate_tool_call_code,
             generate_tool_call_input=generate_tool_call_input
         )
-        tool_connector = aiohttp.TCPConnector(limit=self.request_processor_concurrency, force_close=True, enable_cleanup_closed=True)
+        tool_connector = aiohttp.TCPConnector(limit=self.config["request_processor_concurrency"], force_close=True, enable_cleanup_closed=True)
         tool_timeout = aiohttp.ClientTimeout(total=60)
         tool_session = aiohttp.ClientSession(connector=tool_connector, timeout=tool_timeout)
         self.request_processor = RequestProcessor(
@@ -38,10 +38,15 @@ class SimJupyterTool(BaseTool):
     def get_openai_tool_schema(self) -> OpenAIFunctionToolSchema:
         return self.tool_schema
 
+    async def _start_request_processor(self):
+        if not self.request_processor._running:
+            await self.request_processor.start()
+
     async def create(self, instance_id: Optional[str] = None, **kwargs) -> tuple[str, ToolResponse]:
         if instance_id is None:
             instance_id = str(uuid4())
         assert "history_tool_calls" in kwargs, "history_tool_calls must be provided in kwargs"
+        await self._start_request_processor()
         history_tool_calls = []
         for history_tool_call in kwargs["history_tool_calls"]:
             if history_tool_call.name == "jupyter_code":

@@ -20,3 +20,5 @@ actor_rollout_ref:
       enable: True
       max_assistant_turns: 5
       tool_config_path: "./config/tool_config/jupyter_tool_config.yaml"
+    agent:
+      num_workers: 1
