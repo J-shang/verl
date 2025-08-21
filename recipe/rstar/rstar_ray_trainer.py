@@ -52,14 +52,15 @@ class RStarRayTrainer(RayPPOTrainer):
 
         # weighted sampling
         config = {
-            "error_ratio_weighted": down_sampling_config.get("error_ratio_weighted", False) and do_down_sampling
+            "error_ratio_weighted": down_sampling_config.get("error_ratio_weighted", False) and do_down_sampling,
+            "min_zero_reward_trace_num": down_sampling_config.get("min_zero_reward_trace_num", -1),
+            "min_non_zero_reward_trace_num": down_sampling_config.get("min_non_zero_reward_trace_num", -1),
+            "down_sample_to_n": down_sampling_config.get("down_sample_to_n", -1),
         }
-        batch, metrics = fused_weighted_sampling(
-            batch=batch,
-            tokenizer=self.tokenizer,
-            config=config,
-            world_size=world_size
-        )
+        batch, metrics = fused_weighted_sampling(batch, self.tokenizer, config, do_down_sampling, world_size=world_size)
+        metrics.update(metrics)
+        if check_batch_is_empty(batch, "fused_weighted_sampling"):
+            return None, metrics
 
         return batch, metrics
 
@@ -226,6 +227,8 @@ class RStarRayTrainer(RayPPOTrainer):
                             "down sampling cannot combine with async reward function for now"
                         batch, down_sampling_metrics = self._down_sample_batch(batch)
                         metrics.update(down_sampling_metrics)
+                        if batch is None:
+                            continue
                     #############################################################################
 
                     ################################### rStar ###################################
