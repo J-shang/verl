@@ -490,8 +490,8 @@ class AgentLoopWorker:
 
         non_tensor_batch = {
             "__num_turns__": np.array([input.num_turns for input in inputs], dtype=np.int32),
-            "prompt_text": [input.prompt_text for input in inputs],
-            "response_text": [input.response_text for input in inputs],
+            "prompt_text": np.array([input.prompt_text for input in inputs]),
+            "response_text": np.array([input.response_text for input in inputs]),
         }
 
         # Add multi_modal_inputs to non_tensor_batch if any samples have them

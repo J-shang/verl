@@ -42,6 +42,11 @@ python3 -m recipe.rstar.main_rstar \
     actor_rollout_ref.rollout.trace.token2text=True \
     actor_rollout_ref.rollout.agent.num_workers=1 \
     algorithm.use_kl_in_reward=False \
+    augmentation.do_down_sampling=True \
+    augmentation.down_sampling_config.reject_equal_reward=True \
+    augmentation.down_sampling_config.min_zero_reward_trace_num=2 \
+    augmentation.down_sampling_config.min_non_zero_reward_trace_num=2 \
+    augmentation.down_sampling_config.down_sample_to_n=8 \
     trainer.critic_warmup=0 \
     trainer.logger='["console", "wandb"]' \
     trainer.project_name='gsm8k_tool-agent' \
