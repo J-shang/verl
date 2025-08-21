@@ -1,1 +1,2 @@
 from .reject_sampling import reject_equal_reward
+from .weighted_sampling import fused_weighted_sampling

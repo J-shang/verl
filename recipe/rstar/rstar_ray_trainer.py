@@ -27,7 +27,7 @@ from verl.utils.debug import marked_timer
 from verl.utils.metric import reduce_metrics
 from verl.utils.rollout_skip import RolloutSkip
 
-from .down_sampling import reject_equal_reward
+from .down_sampling import reject_equal_reward, fused_weighted_sampling
 
 
 class RStarRayTrainer(RayPPOTrainer):
@@ -37,10 +37,29 @@ class RStarRayTrainer(RayPPOTrainer):
         world_size = self.actor_rollout_wg.world_size
         metrics = {}
 
+        def check_batch_is_empty(batch: DataProto, down_sampling_stage: str):
+            if batch is None or len(batch) == 0:
+                print(f"Batch is empty after {down_sampling_stage}, skipping the training step.")
+                return True
+            return False
+
         # reject rollout trace of the same prompt with equal rewards
         do_reject_equal_reward = down_sampling_config.get("reject_equal_reward", False) and do_down_sampling
         batch, metrics = reject_equal_reward(batch, do_reject_equal_reward, world_size)
         metrics.update(metrics)
+        if check_batch_is_empty(batch, "reject_equal_reward"):
+            return None, metrics
+
+        # weighted sampling
+        config = {
+            "error_ratio_weighted": down_sampling_config.get("error_ratio_weighted", False) and do_down_sampling
+        }
+        batch, metrics = fused_weighted_sampling(
+            batch=batch,
+            tokenizer=self.tokenizer,
+            config=config,
+            world_size=world_size
+        )
 
         return batch, metrics
 

@@ -62,9 +62,3 @@ if is_npu_available:
         raise ImportError(
             f"package {package_name} is not installed, please run pip install {package_name}=={required_version_spec}"
         ) from e
-
-# activate the register in rstar, for example, RStarToolAgentLoop
-try:
-    from recipe import rstar
-except Exception as e:
-    print(f"Can not activate rstar related registration. Error: {e}")
