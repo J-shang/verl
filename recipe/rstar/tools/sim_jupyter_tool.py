@@ -274,8 +274,14 @@ def generate_tool_call_code(tool_call: Dict) -> str:
         ]
         return combine_code_template(code_to_execute, history_code_to_execute)
 
+    def python_code_with_standard_io_gencode(json_format_data: Dict) -> str:
+        code_to_execute = base64.b64encode(json_format_data["arguments"]["code"].encode()).decode()
+        return combine_code_template(code_to_execute)
+
     if tool_call["name"] == "jupyter_code":
         return jupyter_code_gencode(tool_call)
+    elif tool_call["name"] == "python_code_with_standard_io":
+        return python_code_with_standard_io_gencode(tool_call)
     else:
         raise ValueError(f"Unsupported tool call name: {tool_call['name']}")
 
@@ -283,5 +289,7 @@ def generate_tool_call_code(tool_call: Dict) -> str:
 def generate_tool_call_input(tool_call: Dict) -> str:
     if tool_call["name"] == "jupyter_code":
         return None
+    elif tool_call["name"] == "python_code_with_standard_io":
+        return tool_call["arguments"]["input"]
     else:
         raise ValueError(f"Unsupported tool call name: {tool_call['name']}")
