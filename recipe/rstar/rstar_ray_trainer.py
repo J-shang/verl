@@ -35,7 +35,7 @@ class RStarRayTrainer(RayPPOTrainer):
         do_down_sampling = self.config.augmentation.do_down_sampling
         down_sampling_config = self.config.augmentation.down_sampling_config
         world_size = self.actor_rollout_wg.world_size
-        metrics = {}
+        metrics = {"down_sampling/before_sampling_trace_num": len(batch),}
 
         def check_batch_is_empty(batch: DataProto, down_sampling_stage: str):
             if batch is None or len(batch) == 0:
@@ -62,6 +62,7 @@ class RStarRayTrainer(RayPPOTrainer):
         if check_batch_is_empty(batch, "fused_weighted_sampling"):
             return None, metrics
 
+        metrics["down_sampling/after_sampling_trace_num"] = len(batch)
         return batch, metrics
 
     def fit(self):
