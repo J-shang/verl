@@ -7,6 +7,8 @@ ulimit -n 65535
 
 PROJECT_DIR="$(pwd)"
 CONFIG_PATH="$PROJECT_DIR/recipe/rstar/config"
+PROJECT_NAME="gsm8k-tool-agent"
+EXPERIMENT_NAME="qwen3-8b-jupyter-sgl-tool-agent-verify-n16"
 
 python3 -m recipe.rstar.main_rstar \
     --config-path="$CONFIG_PATH" \
@@ -18,7 +20,7 @@ python3 -m recipe.rstar.main_rstar \
     data.filter_overlong_prompts=True \
     data.truncation='error' \
     data.return_raw_chat=True \
-    actor_rollout_ref.model.path=$PROJECT_DIR/../models/Qwen3-4B \
+    actor_rollout_ref.model.path=$PROJECT_DIR/../models/Qwen3-8B \
     actor_rollout_ref.actor.optim.lr=1e-6 \
     actor_rollout_ref.model.use_remove_padding=True \
     actor_rollout_ref.actor.ppo_mini_batch_size=256 \
@@ -49,14 +51,14 @@ python3 -m recipe.rstar.main_rstar \
     augmentation.down_sampling_config.down_sample_to_n=8 \
     trainer.critic_warmup=0 \
     trainer.logger='["console", "wandb"]' \
-    trainer.project_name='gsm8k_tool-agent' \
-    trainer.experiment_name='qwen3-4b_function_rm-jupyter-sgl-tool-agent-verify-n16' \
-    trainer.n_gpus_per_node=2 \
+    trainer.project_name=$PROJECT_NAME \
+    trainer.experiment_name=$EXPERIMENT_NAME \
+    trainer.n_gpus_per_node=8 \
     trainer.nnodes=1 \
     trainer.save_freq=-1 \
-    trainer.test_freq=20 \
-    trainer.total_training_steps=2 \
+    trainer.test_freq=10 \
+    trainer.total_training_steps=20 \
     data.train_files=$HOME/data/gsm8k/train.parquet \
     data.val_files=$HOME/data/gsm8k/test.parquet \
     actor_rollout_ref.rollout.multi_turn.tool_config_path="$PROJECT_DIR/recipe/rstar/config/tool_config/jupyter_tool_config.yaml" \
-    trainer.total_epochs=15 $@
+    trainer.total_epochs=15 $@ 2>&1 | tee $PROJECT_NAME-$EXPERIMENT_NAME.log
