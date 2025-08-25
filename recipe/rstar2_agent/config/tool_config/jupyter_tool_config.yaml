@@ -1,8 +1,10 @@
 tools:
-  - class_name: "recipe.rstar2_agent.tools.sim_jupyter_tool.SimJupyterTool"
+  - class_name: "recipe.rstar2_agent.tools.code_judge_tool.CodeJudgeTool"
     config: 
       type: native
       request_processor_concurrency: 8
+      request_processor_batch_size: 32
+      request_processor_batch_timeout_seconds: 30
     tool_schema:
       type: "function"
       function:
