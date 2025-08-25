@@ -36,7 +36,7 @@ def extract_solution(solution_str):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--local_dir", default="~/data/gsm8k")
+    parser.add_argument("--local_dir", default="~/data/rstar2-agent/gsm8k")
     parser.add_argument("--hdfs_dir", default=None)
 
     args = parser.parse_args()
@@ -47,14 +47,11 @@ if __name__ == "__main__":
     train_dataset = dataset["train"]
     test_dataset = dataset["test"]
 
-    instruction_following = "Let's think step by step and output the final answer after `####`."
-
     # add a row to each data item that represents a unique id
     def make_map_fn(split):
         def process_fn(example, idx):
             question_raw = example.pop("question")
-
-            question = question_raw + " " + instruction_following
+            question = question_raw
 
             answer_raw = example.pop("answer")
             solution = extract_solution(answer_raw)

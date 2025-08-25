@@ -58,7 +58,7 @@ python3 -m recipe.rstar2_agent.main_rstar2_agent \
     trainer.save_freq=-1 \
     trainer.test_freq=10 \
     trainer.total_training_steps=20 \
-    data.train_files=$HOME/data/gsm8k/train.parquet \
+    data.train_files=$HOME/data/rstar2-agent/dapo-math-17k-en/train.parquet \
     data.val_files=$HOME/data/gsm8k/test.parquet \
     actor_rollout_ref.rollout.multi_turn.tool_config_path="$PROJECT_DIR/recipe/rstar2_agent/config/tool_config/python_tool_config.yaml" \
     trainer.total_epochs=15 $@ 2>&1 | tee $PROJECT_NAME-$EXPERIMENT_NAME.log
