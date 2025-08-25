@@ -217,6 +217,29 @@ class TaskRunner:
         # Used for multimodal LLM, could be None
         processor = hf_processor(local_path, trust_remote_code=trust_remote_code, use_fast=True)
 
+        ################################### rStar ###################################
+        # support data.filter_overlong_prompts
+        if config.actor_rollout_ref.model.get("custom_chat_template", None) is not None:
+            if processor is not None:
+                processor.chat_template = config.actor_rollout_ref.model.custom_chat_template
+            tokenizer.chat_template = config.actor_rollout_ref.model.custom_chat_template
+
+        tool_config_path = config.actor_rollout_ref.rollout.multi_turn.tool_config_path
+        tool_list = []
+        if tool_config_path is not None:
+            from verl.tools.utils.tool_registry import ToolType, get_tool_class, OpenAIFunctionToolSchema
+            tools_config = OmegaConf.load(tool_config_path)
+            for tool_config in tools_config.tools:
+                tool_type = ToolType(tool_config.config.type)
+                assert tool_type is ToolType.NATIVE
+                if tool_config.get("tool_schema", None) is None:
+                    tool_schema = None
+                else:
+                    tool_schema_dict = OmegaConf.to_container(tool_config.tool_schema, resolve=True)
+                    tool_schema = OpenAIFunctionToolSchema.model_validate(tool_schema_dict).model_dump(exclude_unset=True, exclude_none=True)
+                tool_list.append(tool_schema)
+        #############################################################################
+
         actor_rollout_cls, ray_worker_group_cls = self.add_actor_rollout_worker(config)
         self.add_critic_worker(config)
 
@@ -246,6 +269,10 @@ class TaskRunner:
         # Create training and validation datasets.
         train_dataset = create_rl_dataset(config.data.train_files, config.data, tokenizer, processor, is_train=True)
         val_dataset = create_rl_dataset(config.data.val_files, config.data, tokenizer, processor, is_train=False)
+        ################################### rStar ###################################
+        train_dataset.dataframe = train_dataset.maybe_filter_out_long_prompts(train_dataset.dataframe, tools=tool_list)
+        val_dataset.dataframe = val_dataset.maybe_filter_out_long_prompts(val_dataset.dataframe, tools=tool_list)
+        #############################################################################
         train_sampler = create_rl_sampler(config.data, train_dataset)
 
         # Initialize the rstar2 agent PPO trainer.
