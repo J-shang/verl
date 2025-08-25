@@ -19,48 +19,19 @@ import os
 from typing import Any
 from uuid import uuid4
 
-from verl.experimental.agent_loop.agent_loop import AgentLoopBase, AgentLoopOutput, register
+from verl.experimental.agent_loop.agent_loop import AgentLoopOutput, register
 from verl.experimental.agent_loop.tool_agent_loop import ToolAgentLoop
-from verl.experimental.agent_loop.tool_parser import FunctionCall, ToolParser
+from verl.experimental.agent_loop.tool_parser import FunctionCall
 from verl.tools.schemas import ToolResponse
-from verl.tools.utils.tool_registry import initialize_tools_from_config
 from verl.utils.profiler import simple_timer
 from verl.utils.rollout_trace import rollout_trace_op
 
 logger = logging.getLogger(__file__)
 logger.setLevel(os.getenv("VERL_LOGGING_LEVEL", "WARN"))
 
+
 @register("rstar2_agent")
 class RStar2AgentLoop(ToolAgentLoop):
-    @classmethod
-    def init_class(cls, config, tokenizer, processor, **kwargs):
-        if cls._class_initialized:
-            return
-        cls._class_initialized = True
-        print("Performing class-level ToolAgentLoop initialization")
-
-        # Initialize tools from config file
-        cls.tokenizer = tokenizer
-        cls.processor = processor
-        cls.max_user_turns = config.actor_rollout_ref.rollout.multi_turn.max_user_turns
-        cls.max_assistant_turns = config.actor_rollout_ref.rollout.multi_turn.max_assistant_turns
-        cls.max_parallel_calls = config.actor_rollout_ref.rollout.multi_turn.max_parallel_calls
-        cls.max_tool_response_length = config.actor_rollout_ref.rollout.multi_turn.max_tool_response_length
-        cls.tool_response_truncate_side = config.actor_rollout_ref.rollout.multi_turn.tool_response_truncate_side
-        tool_config_path = config.actor_rollout_ref.rollout.multi_turn.tool_config_path
-        tool_list = initialize_tools_from_config(tool_config_path) if tool_config_path else []
-        cls.tools = {tool.name: tool for tool in tool_list}
-        cls.tool_schemas = [tool.tool_schema.model_dump(exclude_unset=True, exclude_none=True) for tool in tool_list]
-        cls.tool_parser = ToolParser.get_tool_parser(config.actor_rollout_ref.rollout.multi_turn.format, cls.tokenizer)
-        print(f"Initialized tools: {cls.tools}")
-
-        cls.apply_chat_template_kwargs = config.data.get("apply_chat_template_kwargs", {})
-        cls.prompt_length = config.actor_rollout_ref.rollout.prompt_length
-        cls.response_length = config.actor_rollout_ref.rollout.response_length
-        cls.system_prompt = tokenizer.apply_chat_template(
-            [{}], add_generation_prompt=False, tokenize=True, **cls.apply_chat_template_kwargs
-        )
-
     @rollout_trace_op
     async def run(self, sampling_params: dict[str, Any], **kwargs) -> AgentLoopOutput:
         messages = list(kwargs["raw_prompt"])
