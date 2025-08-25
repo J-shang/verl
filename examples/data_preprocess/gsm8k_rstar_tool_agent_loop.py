@@ -60,7 +60,7 @@ if __name__ == "__main__":
             solution = extract_solution(answer_raw)
             data = {
                 "data_source": data_source,
-                "agent_name": "rstar_tool_agent",
+                "agent_name": "rstar2_agent",
                 "prompt": [
                     {
                         "role": "user",

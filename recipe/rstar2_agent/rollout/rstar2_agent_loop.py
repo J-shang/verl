@@ -30,8 +30,8 @@ from verl.utils.rollout_trace import rollout_trace_op
 logger = logging.getLogger(__file__)
 logger.setLevel(os.getenv("VERL_LOGGING_LEVEL", "WARN"))
 
-@register("rstar_tool_agent")
-class RStarToolAgentLoop(ToolAgentLoop):
+@register("rstar2_agent")
+class RStar2AgentLoop(ToolAgentLoop):
     @classmethod
     def init_class(cls, config, tokenizer, processor, **kwargs):
         if cls._class_initialized:

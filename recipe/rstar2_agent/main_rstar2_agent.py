@@ -1,5 +1,5 @@
 """
-The only different of this file and the verl/trainer/main_ppo.py is the usage of RStarRayTrainer instead of RayPPOTrainer.
+The only different of this file and the verl/trainer/main_ppo.py is the usage of RStar2AgentRayTrainer instead of RayPPOTrainer.
 """
 
 import os
@@ -14,10 +14,10 @@ from verl.trainer.main_ppo import create_rl_dataset, create_rl_sampler
 from verl.trainer.ppo.reward import load_reward_manager
 from verl.utils.device import is_cuda_available
 
-from .rstar_ray_trainer import RStarRayTrainer
+from .rstar2_agent_ray_trainer import RStar2AgentRayTrainer
 
 
-@hydra.main(config_path="config", config_name="rstar_trainer", version_base=None)
+@hydra.main(config_path="config", config_name="rstar2_agent_trainer", version_base=None)
 def main(config):
     """Main entry point for PPO training with Hydra configuration management.
 
@@ -248,8 +248,8 @@ class TaskRunner:
         val_dataset = create_rl_dataset(config.data.val_files, config.data, tokenizer, processor, is_train=False)
         train_sampler = create_rl_sampler(config.data, train_dataset)
 
-        # Initialize the rstar PPO trainer.
-        trainer = RStarRayTrainer(
+        # Initialize the rstar2 agent PPO trainer.
+        trainer = RStar2AgentRayTrainer(
             config=config,
             tokenizer=tokenizer,
             processor=processor,

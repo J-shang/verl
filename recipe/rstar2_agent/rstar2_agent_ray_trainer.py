@@ -30,7 +30,7 @@ from verl.utils.rollout_skip import RolloutSkip
 from .down_sampling import reject_equal_reward, fused_weighted_sampling
 
 
-class RStarRayTrainer(RayPPOTrainer):
+class RStar2AgentRayTrainer(RayPPOTrainer):
     def _down_sample_batch(self, batch: DataProto) -> DataProto:
         do_down_sampling = self.config.augmentation.do_down_sampling
         down_sampling_config = self.config.augmentation.down_sampling_config
@@ -45,8 +45,8 @@ class RStarRayTrainer(RayPPOTrainer):
 
         # reject rollout trace of the same prompt with equal rewards
         do_reject_equal_reward = down_sampling_config.get("reject_equal_reward", False) and do_down_sampling
-        batch, metrics = reject_equal_reward(batch, do_reject_equal_reward, world_size)
-        metrics.update(metrics)
+        batch, _metrics = reject_equal_reward(batch, do_reject_equal_reward, world_size)
+        metrics.update(_metrics)
         if check_batch_is_empty(batch, "reject_equal_reward"):
             return None, metrics
 
@@ -57,8 +57,8 @@ class RStarRayTrainer(RayPPOTrainer):
             "min_non_zero_reward_trace_num": down_sampling_config.get("min_non_zero_reward_trace_num", -1),
             "down_sample_to_n": down_sampling_config.get("down_sample_to_n", -1),
         }
-        batch, metrics = fused_weighted_sampling(batch, self.tokenizer, config, do_down_sampling, world_size=world_size)
-        metrics.update(metrics)
+        batch, _metrics = fused_weighted_sampling(batch, self.tokenizer, config, do_down_sampling, world_size=world_size)
+        metrics.update(_metrics)
         if check_batch_is_empty(batch, "fused_weighted_sampling"):
             return None, metrics
 

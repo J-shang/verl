@@ -1,2 +1,0 @@
-- name: rstar_tool_agent
-  _target_: recipe.rstar.rollout.rstar_tool_agent_loop.RStarToolAgentLoop

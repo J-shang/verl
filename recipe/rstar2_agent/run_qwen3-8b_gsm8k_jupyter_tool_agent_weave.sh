@@ -6,13 +6,13 @@ set -x
 ulimit -n 65535
 
 PROJECT_DIR="$(pwd)"
-CONFIG_PATH="$PROJECT_DIR/recipe/rstar/config"
+CONFIG_PATH="$PROJECT_DIR/recipe/rstar2_agent/config"
 PROJECT_NAME="gsm8k-tool-agent"
 EXPERIMENT_NAME="qwen3-8b-jupyter-sgl-tool-agent-verify-n16"
 
-python3 -m recipe.rstar.main_rstar \
+python3 -m recipe.rstar2_agent.main_rstar2_agent \
     --config-path="$CONFIG_PATH" \
-    --config-name='rstar_trainer' \
+    --config-name='rstar2_agent_trainer' \
     algorithm.adv_estimator=grpo \
     data.train_batch_size=256 \
     data.max_prompt_length=1024 \
@@ -60,5 +60,5 @@ python3 -m recipe.rstar.main_rstar \
     trainer.total_training_steps=20 \
     data.train_files=$HOME/data/gsm8k/train.parquet \
     data.val_files=$HOME/data/gsm8k/test.parquet \
-    actor_rollout_ref.rollout.multi_turn.tool_config_path="$PROJECT_DIR/recipe/rstar/config/tool_config/jupyter_tool_config.yaml" \
+    actor_rollout_ref.rollout.multi_turn.tool_config_path="$PROJECT_DIR/recipe/rstar2_agent/config/tool_config/jupyter_tool_config.yaml" \
     trainer.total_epochs=15 $@ 2>&1 | tee $PROJECT_NAME-$EXPERIMENT_NAME.log

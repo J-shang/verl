@@ -26,7 +26,7 @@ actor_rollout_ref:
       tool_config_path: "./config/tool_config/jupyter_tool_config.yaml"
     agent:
       num_workers: 1
-      agent_loop_config_path: recipe/rstar/config/rstar_agent_loop.yaml
+      agent_loop_config_path: recipe/rstar2_agent/config/rstar2_agent_loop.yaml
 
 augmentation:
   do_down_sampling: False

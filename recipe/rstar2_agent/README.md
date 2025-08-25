@@ -2,7 +2,7 @@
 After install verl, run the following script to install the code judge server.
 
 ```bash
-bash recipe/rstar/install.sh
+bash recipe/rstar2_agent/install.sh
 ```
 
 ## Launch Code Judge Server
@@ -27,7 +27,7 @@ tmux new-session -d -s worker 'cd $WORKSPACE/code-judge && MAX_EXECUTION_TIME=4 
 We use gsm8k as an example to show how to process data.
 
 ```bash
-python examples/data_preprocess/gsm8k_rstar_tool_agent_loop.py
+python examples/data_preprocess/gsm8k_rstar2_agent_loop.py
 ```
 
 ## Download Model
@@ -39,5 +39,5 @@ huggingface-cli download Qwen/Qwen3-8B --local-dir models/Qwen3-8B
 ## Run an Example
 
 ```bash
-bash recipe/rstar/run_qwen3-8b_gsm8k_jupyter_tool_agent_weave.sh
+bash recipe/rstar2_agent/run_qwen3-8b_gsm8k_jupyter_tool_agent_weave.sh
 ```
