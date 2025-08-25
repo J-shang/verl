@@ -46,6 +46,8 @@ python3 -m recipe.rstar2_agent.main_rstar2_agent \
     algorithm.use_kl_in_reward=False \
     augmentation.do_down_sampling=True \
     augmentation.down_sampling_config.reject_equal_reward=True \
+    augmentation.down_sampling_config.roc_error_ratio=True \
+    augmentation.down_sampling_config.roc_answer_format=True \
     augmentation.down_sampling_config.min_zero_reward_trace_num=2 \
     augmentation.down_sampling_config.min_non_zero_reward_trace_num=2 \
     augmentation.down_sampling_config.down_sample_to_n=8 \

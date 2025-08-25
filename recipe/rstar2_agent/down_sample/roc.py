@@ -9,8 +9,9 @@ from verl.protocol import DataProto
 from .utils import filter_by_mask, decode_prompt_response_str
 
 
-def fused_weighted_sampling(batch: DataProto, tokenizer: PreTrainedTokenizerFast, config: dict, do_sample=True, world_size=None):
-    error_ratio_weighted = config["error_ratio_weighted"]
+def resample_of_correct(batch: DataProto, tokenizer: PreTrainedTokenizerFast, config: dict, do_sample=True, world_size=None):
+    roc_error_ratio = config["roc_error_ratio"]
+    roc_answer_format = config["roc_answer_format"]
     min_zero_reward_trace_num = config["min_zero_reward_trace_num"]
     min_non_zero_reward_trace_num = config["min_non_zero_reward_trace_num"]
     down_sample_to_n = config["down_sample_to_n"]
@@ -21,10 +22,16 @@ def fused_weighted_sampling(batch: DataProto, tokenizer: PreTrainedTokenizerFast
     penalty_weights = np.zeros(len(response_text))
     metrics = {}
 
-    # calculate error ratio weight
-    _penalty_weights, _metrics = calc_error_ratio_weight(response_text)
+    # calculate error ratio penalty weight
+    _penalty_weights, _metrics = calc_error_ratio_penalty_weights(response_text)
     metrics.update(_metrics)
-    if error_ratio_weighted:
+    if roc_error_ratio:
+        penalty_weights += _penalty_weights
+
+    # calculate format penalty weight
+    _penalty_weights, _metrics = calc_format_penalty_weights(response_text)
+    metrics.update(_metrics)
+    if roc_answer_format:
         penalty_weights += _penalty_weights
 
     # sample by penalty weights
@@ -68,7 +75,7 @@ def fused_weighted_sampling(batch: DataProto, tokenizer: PreTrainedTokenizerFast
     return batch, metrics
 
 
-def calc_error_ratio_weight(response_text: List[str]):
+def calc_error_ratio_penalty_weights(response_text: List[str]):
     def error_ratio(text, pattern=r'<tool_response>.*?</tool_response>'):
         matches = re.findall(pattern, text, re.DOTALL)
         error_count = len([match for match in matches if 'error' in match.lower()])
@@ -77,7 +84,7 @@ def calc_error_ratio_weight(response_text: List[str]):
         else:
             return error_count / len(matches), error_count, len(matches)
 
-    penalty_weights, metrics = [], {}
+    penalty_weights = []
     total_error_count, total_res_count = 0, 0
 
     for text in response_text:
@@ -86,7 +93,44 @@ def calc_error_ratio_weight(response_text: List[str]):
         total_error_count += error_count
         total_res_count += res_count
     metrics = {
-        'error_ratio_weighted_sampling/global_err_ratio': total_error_count / total_res_count if total_res_count > 0 else 0,
-        'error_ratio_weighted_sampling/penalty_weight': np.mean(penalty_weights) if penalty_weights else 0,
+        'roc_error_ratio/global_err_ratio': total_error_count / total_res_count if total_res_count > 0 else 0,
+        'roc_error_ratio/penalty_weight': np.mean(penalty_weights) if penalty_weights else 0,
+    }
+    return np.array(penalty_weights), metrics
+
+
+def calc_format_penalty_weights(response_text: List[str]):
+    def answer_tag_repetition(text: str, answer_tags=["<answer>", "</answer>"], answer_pattern=r'<answer>.*?</answer>', turn_pattern=r'<\|im_start\|>assistant.*?<\|im_end\|>'):
+        if any(ans_tag not in text for ans_tag in answer_tags):
+            return 1.0, 0
+
+        answer_tags_count = [text.count(ans_tag) for ans_tag in answer_tags]
+        closed_ans_tag_count = len(re.findall(answer_pattern, text, re.DOTALL))
+        if any(ans_tag_count!=closed_ans_tag_count for ans_tag_count in answer_tags_count):
+            return 1.0, closed_ans_tag_count
+
+        matches = re.findall(turn_pattern, text, re.DOTALL)
+        num_turns = len(matches)
+        if num_turns == 0:
+            return 1.0, closed_ans_tag_count
+
+        penalty_weight = min((closed_ans_tag_count - 1) / num_turns, 1.0)
+        return penalty_weight, closed_ans_tag_count
+
+    penalty_weights = []
+    total_ans_count, zero_ans_count, one_ans_count, gt_one_ans_count = 0, 0, 0, 0
+    for text in response_text:
+        penalty_weight, ans_tag_count = answer_tag_repetition(text)
+        penalty_weights.append(penalty_weight)
+        total_ans_count += ans_tag_count
+        zero_ans_count += (1 if ans_tag_count == 0 else 0)
+        one_ans_count += (1 if ans_tag_count == 1 else 0)
+        gt_one_ans_count += (1 if ans_tag_count > 1 else 0)
+
+    metrics = {
+        'roc_answer_format/answer_per_rollout_mean': total_ans_count / len(response_text),
+        'roc_answer_format/zero_answer_count': zero_ans_count,
+        'roc_answer_format/one_answer_count': one_ans_count,
+        'roc_answer_format/gt_one_answer_count': gt_one_ans_count,
     }
     return np.array(penalty_weights), metrics

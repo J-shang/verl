@@ -27,7 +27,7 @@ from verl.utils.debug import marked_timer
 from verl.utils.metric import reduce_metrics
 from verl.utils.rollout_skip import RolloutSkip
 
-from .down_sampling import reject_equal_reward, fused_weighted_sampling
+from .down_sample import reject_equal_reward, resample_of_correct
 
 
 class RStar2AgentRayTrainer(RayPPOTrainer):
@@ -52,12 +52,13 @@ class RStar2AgentRayTrainer(RayPPOTrainer):
 
         # weighted sampling
         config = {
-            "error_ratio_weighted": down_sampling_config.get("error_ratio_weighted", False) and do_down_sampling,
+            "roc_error_ratio": down_sampling_config.get("roc_error_ratio", False) and do_down_sampling,
+            "roc_answer_format": down_sampling_config.get("roc_answer_format", False) and do_down_sampling,
             "min_zero_reward_trace_num": down_sampling_config.get("min_zero_reward_trace_num", -1),
             "min_non_zero_reward_trace_num": down_sampling_config.get("min_non_zero_reward_trace_num", -1),
             "down_sample_to_n": down_sampling_config.get("down_sample_to_n", -1),
         }
-        batch, _metrics = fused_weighted_sampling(batch, self.tokenizer, config, do_down_sampling, world_size=world_size)
+        batch, _metrics = resample_of_correct(batch, self.tokenizer, config, do_down_sampling, world_size=world_size)
         metrics.update(_metrics)
         if check_batch_is_empty(batch, "fused_weighted_sampling"):
             return None, metrics

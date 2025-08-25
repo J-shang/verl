@@ -32,6 +32,8 @@ augmentation:
   do_down_sampling: False
   down_sampling_config:
     reject_equal_reward: False
+    roc_error_ratio: False
+    roc_answer_format: False
     min_zero_reward_trace_num: -1
     min_non_zero_reward_trace_num: -1
     down_sample_to_n: -1
