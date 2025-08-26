@@ -45,7 +45,7 @@ if __name__ == "__main__":
             solution = example["reward_model"]["ground_truth"]
 
             data = {
-                "data_source": "math_dapo",
+                "data_source": data_source,
                 "agent_name": "rstar2_agent",
                 "prompt": [
                     {

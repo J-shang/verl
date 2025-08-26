@@ -54,6 +54,9 @@ python3 -m recipe.rstar2_agent.main_rstar2_agent \
     augmentation.down_sampling_config.min_zero_reward_trace_num=2 \
     augmentation.down_sampling_config.min_non_zero_reward_trace_num=2 \
     augmentation.down_sampling_config.down_sample_to_n=16 \
+    custom_reward_function.path=$PROJECT_DIR/recipe/rstar2_agent/reward/prime_wrapper.py \
+    custom_reward_function.name=compute_score \
+    reward_model.reward_manager=prime \
     trainer.critic_warmup=0 \
     trainer.logger='["console", "wandb"]' \
     trainer.project_name=$PROJECT_NAME \
