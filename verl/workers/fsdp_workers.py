@@ -1797,3 +1797,7 @@ class AsyncActorRolloutRefWorker(ActorRolloutRefWorker):
             await self.rollout.sleep()
         # return something to block the caller
         return True
+
+    @register(dispatch_mode=Dispatch.DIRECT_ROLLOUT_METHOD)
+    async def get_scheduler_info(self):
+        return await self.rollout.get_scheduler_info()

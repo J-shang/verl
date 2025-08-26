@@ -99,3 +99,6 @@ class AsyncSGLangServer(AsyncServerBase):
         tasks = [worker.sleep.remote() for worker in self.workers]
         if tasks:
             await asyncio.gather(*tasks)
+
+    async def get_scheduler_info(self):
+        return await self.master_worker.get_scheduler_info.remote()

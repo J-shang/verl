@@ -117,7 +117,7 @@ class RStar2AgentAsyncLLMServerManager(AsyncLLMServerManager):
         self.weighted_serveres = []
         assert budget_coef > 0
         for server in server_handles:
-            server_info = server.get_server_info()
+            server_info = ray.get(server.get_scheduler_info.remote())
             print(server_info)
             self.weighted_serveres.append([-server_info["max_total_num_tokens"] / budget_coef, (hash(server), server)])
         heapq.heapify(self.weighted_serveres)
@@ -320,7 +320,7 @@ class AgentLoopWorker:
             server_handles (List[ray.actor.ActorHandle]): OpenAI compatible LLM server actor handles.
         """
         self.config = config
-        self.server_manager = RStar2AgentAsyncLLMServerManager(config, server_handles, config.actor_rollout_ref.rollout.agent.budget_coef)
+        self.server_manager = RStar2AgentAsyncLLMServerManager(config, server_handles, config.actor_rollout_ref.rollout.agent.get("server_budget_coef", 1))
 
         model_path = config.actor_rollout_ref.model.path
         self.model_name = "/".join(model_path.split("/")[-2:])

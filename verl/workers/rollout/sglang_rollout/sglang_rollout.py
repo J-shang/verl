@@ -1588,3 +1588,6 @@ class SGLangRollout(BaseRollout):
             return
         await self.sharding_manager.sleep()
         self.is_sleep = True
+
+    async def get_scheduler_info(self):
+        return self._engine.scheduler_info
