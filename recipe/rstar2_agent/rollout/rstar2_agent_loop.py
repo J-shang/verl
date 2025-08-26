@@ -96,6 +96,7 @@ class RStar2AgentLoop(ToolAgentLoop):
                 break
 
             ################################### rStar ###################################
+            tool_calls = tool_calls[: self.max_parallel_calls]
             total_tool_responses, filtered_tool_calls, pending_pos = [], [], []
             for i, tool_call in enumerate(tool_calls):
                 if isinstance(tool_call, ToolResponse):
