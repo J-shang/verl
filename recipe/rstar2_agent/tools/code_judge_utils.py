@@ -109,7 +109,9 @@ async def run_tool_calls_on_server_async(
                                     max_retries: int = 4,
                                     backoff_factor: float = 0.5,
                                     generate_tool_call_code: Callable = None,
-                                    generate_tool_call_input: Callable = None):
+                                    generate_tool_call_input: Callable = None,
+                                    host_addr: str = "localhost",
+                                    host_port: str = "8088"):
     submissions = []
     for tool_call in tool_calls:
         submissions.append({
@@ -118,7 +120,7 @@ async def run_tool_calls_on_server_async(
             "input": generate_tool_call_input(tool_call),
         })
 
-    url = "http://localhost:8088/run/long-batch"
+    url = f"http://{host_addr}:{host_port}/run/long-batch"
     results = await call_long_batch(url, submissions, session, max_retries, backoff_factor)
 
     if None in results:

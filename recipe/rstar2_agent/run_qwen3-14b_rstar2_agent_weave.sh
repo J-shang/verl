@@ -7,7 +7,7 @@ ulimit -n 65535
 
 PROJECT_DIR="$(pwd)"
 CONFIG_PATH="$PROJECT_DIR/recipe/rstar2_agent/config"
-PROJECT_NAME="gsm8k-rstar2-agent"
+PROJECT_NAME="rstar2-agent-test"
 EXPERIMENT_NAME="qwen3-14b-sgl-tool-agent-verify-n16"
 
 python3 -m recipe.rstar2_agent.main_rstar2_agent \
@@ -36,15 +36,12 @@ python3 -m recipe.rstar2_agent.main_rstar2_agent \
     actor_rollout_ref.model.enable_gradient_checkpointing=True \
     actor_rollout_ref.actor.fsdp_config.param_offload=False \
     actor_rollout_ref.actor.fsdp_config.optimizer_offload=False \
-    actor_rollout_ref.rollout.log_prob_use_dynamic_bsz=True \
-    actor_rollout_ref.rollout.ppo_max_token_len_per_gpu=40960 \
     actor_rollout_ref.rollout.tensor_model_parallel_size=4 \
     actor_rollout_ref.rollout.name=sglang \
     actor_rollout_ref.rollout.mode=async \
     actor_rollout_ref.rollout.gpu_memory_utilization=0.8 \
     actor_rollout_ref.rollout.n=32 \
     actor_rollout_ref.ref.log_prob_use_dynamic_bsz=True \
-    actor_rollout_ref.ref.ppo_max_token_len_per_gpu=40960 \
     actor_rollout_ref.ref.fsdp_config.param_offload=True \
     actor_rollout_ref.rollout.trace.backend=weave \
     actor_rollout_ref.rollout.trace.token2text=True \
@@ -66,7 +63,7 @@ python3 -m recipe.rstar2_agent.main_rstar2_agent \
     trainer.save_freq=-1 \
     trainer.test_freq=5 \
     trainer.total_training_steps=200 \
-    data.train_files=["$HOME/data/rstar-agent/omr_0521_27k_int/train.parquet", "$HOME/data/rstar-agent/orz_filter_52k/train.parquet", "$HOME/data/rstar-agent/euler_600/train.parquet"] \
-    data.val_files=["$HOME/data/rstar-agent/aime2024/test.parquet", "$HOME/data/rstar-agent/math500/test.parquet"] \
+    data.train_files="['$HOME/data/rstar-agent/omr_0521_27k_int/train.parquet', '$HOME/data/rstar-agent/orz_filter_52k/train.parquet', '$HOME/data/rstar-agent/euler_600/train.parquet']" \
+    data.val_files="['$HOME/data/rstar-agent/aime2024/test.parquet', '$HOME/data/rstar-agent/math500/test.parquet']" \
     actor_rollout_ref.rollout.multi_turn.tool_config_path="$PROJECT_DIR/recipe/rstar2_agent/config/tool_config/python_tool_config.yaml" \
     trainer.total_epochs=15 $@ 2>&1 | tee $PROJECT_NAME-$EXPERIMENT_NAME.log

@@ -18,10 +18,14 @@ class CodeJudgeTool(BaseTool):
         super().__init__(config, tool_schema)
         self._instance_dict = {}
 
+        host_addr = self.config.get("host_addr", "localhost")
+        host_port = self.config.get("host_port", "8088")
         run_jupyter_tool_calls_on_server_async = partial(
             run_tool_calls_on_server_async,
             generate_tool_call_code=generate_tool_call_code,
-            generate_tool_call_input=generate_tool_call_input
+            generate_tool_call_input=generate_tool_call_input,
+            host_addr=host_addr,
+            host_port=host_port,
         )
         request_processor_batch_size = self.config.get("request_processor_batch_size", 1)
         request_processor_concurrency = self.config.get("request_processor_concurrency", 1)
