@@ -24,6 +24,7 @@ actor_rollout_ref:
       enable: True
       max_assistant_turns: 5
       tool_config_path: "./config/tool_config/python_tool_config.yaml"
+      format: rstar2_agent_hermes
     agent:
       num_workers: 1
       agent_loop_config_path: recipe/rstar2_agent/config/rstar2_agent_loop.yaml

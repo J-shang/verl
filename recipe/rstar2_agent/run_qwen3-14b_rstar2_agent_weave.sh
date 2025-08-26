@@ -26,7 +26,7 @@ python3 -m recipe.rstar2_agent.main_rstar2_agent \
     actor_rollout_ref.model.use_remove_padding=True \
     actor_rollout_ref.actor.ppo_mini_batch_size=512 \
     actor_rollout_ref.actor.use_dynamic_bsz=True \
-    actor_rollout_ref.actor.ppo_max_token_len_per_gpu=40960 \
+    actor_rollout_ref.actor.ppo_max_token_len_per_gpu=20480 \
     actor_rollout_ref.actor.use_kl_loss=False \
     actor_rollout_ref.actor.kl_loss_coef=0 \
     actor_rollout_ref.actor.kl_loss_type=low_var_kl \
@@ -62,7 +62,7 @@ python3 -m recipe.rstar2_agent.main_rstar2_agent \
     trainer.project_name=$PROJECT_NAME \
     trainer.experiment_name=$EXPERIMENT_NAME \
     trainer.n_gpus_per_node=8 \
-    trainer.nnodes=1 \
+    trainer.nnodes=4 \
     trainer.save_freq=-1 \
     trainer.test_freq=5 \
     trainer.total_training_steps=200 \

@@ -95,6 +95,17 @@ class RStar2AgentLoop(ToolAgentLoop):
             if not tool_calls:
                 break
 
+            ################################### rStar ###################################
+            total_tool_responses, filtered_tool_calls, pending_pos = [], [], []
+            for i, tool_call in enumerate(tool_calls):
+                if isinstance(tool_call, ToolResponse):
+                    total_tool_responses.append(tool_call)
+                else:
+                    total_tool_responses.append(None)
+                    pending_pos.append(i)
+                    filtered_tool_calls.append(tool_call)
+            tool_calls = filtered_tool_calls
+            #############################################################################
             # call tools
             tasks = []
             for tool_call in tool_calls[: self.max_parallel_calls]:
@@ -108,6 +119,12 @@ class RStar2AgentLoop(ToolAgentLoop):
                 #############################################################################
             with simple_timer("tool_calls", metrics):
                 tool_responses = await asyncio.gather(*tasks)
+            ################################### rStar ###################################
+            assert len(pending_pos) == len(tool_responses)
+            for i, tool_response in zip(pending_pos, tool_responses):
+                total_tool_responses[i] = tool_response
+            tool_responses = total_tool_responses
+            #############################################################################
             if any(isinstance(item, Exception) for item in tool_responses):
                 break
 
