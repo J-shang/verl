@@ -107,6 +107,76 @@ class AsyncLLMServerManager:
         return output
 
 
+class RStar2AgentAsyncLLMServerManager(AsyncLLMServerManager):
+    def __init__(self, config: DictConfig, server_handles: list[ray.actor.ActorHandle], budget_coef: int = 1):
+        self.config = config
+        self.server_handles = server_handles
+        random.shuffle(self.server_handles)
+
+        # Least requests load balancing
+        self.weighted_serveres = []
+        assert budget_coef > 0
+        for server in server_handles:
+            server_info = server.get_server_info()
+            print(server_info)
+            self.weighted_serveres.append([-server_info["max_total_num_tokens"] / budget_coef, (hash(server), server)])
+        heapq.heapify(self.weighted_serveres)
+
+        # map request_id to server
+        self.request_id_to_server = {}
+
+    async def _choose_server(self, request_id: str, budget: int) -> ray.actor.ActorHandle:
+        if request_id in self.request_id_to_server:
+            return self.request_id_to_server[request_id]
+
+        while self.weighted_serveres[0][0] + budget > 0:
+            await asyncio.sleep(0.1)
+        server = self.weighted_serveres[0][1][1]
+        self.weighted_serveres[0][0] += budget
+        heapq.heapreplace(self.weighted_serveres, self.weighted_serveres[0])
+        self.request_id_to_server[request_id] = server
+        return server
+
+    def _release_request(self, request_id: str, budget: int):
+        assert request_id in self.request_id_to_server
+        _server = self.request_id_to_server[request_id]
+        for i, (weight, (hash_server, server)) in enumerate(self.weighted_serveres):
+            if hash(_server) == hash_server:
+                self.weighted_serveres[i][0] -= budget
+                heapq.heapify(self.weighted_serveres)
+                break
+        self.request_id_to_server.pop(request_id)
+
+    @rollout_trace_op
+    async def generate(
+        self,
+        request_id,
+        *,
+        prompt_ids: list[int],
+        sampling_params: dict[str, Any],
+        image_data: Optional[list[Any]] = None,
+        budget: int = 1,
+    ) -> list[int]:
+        """Generate tokens from prompt ids.
+
+        Args:
+            request_id (str): request id for sticky session.
+            prompt_ids (List[int]): List of prompt token ids.
+            sampling_params (Dict[str, Any]): Sampling parameters for the chat completion.
+
+        Returns:
+            List[int]: List of generated token ids.
+        """
+        server = await self._choose_server(request_id, budget=budget)
+        output = await server.generate.remote(
+            request_id=request_id,
+            prompt_ids=prompt_ids,
+            sampling_params=sampling_params,
+            image_data=image_data,
+        )
+        return output
+
+
 class AgentLoopMetrics(BaseModel):
     """Agent loop performance metrics."""
 
@@ -250,7 +320,7 @@ class AgentLoopWorker:
             server_handles (List[ray.actor.ActorHandle]): OpenAI compatible LLM server actor handles.
         """
         self.config = config
-        self.server_manager = AsyncLLMServerManager(config, server_handles)
+        self.server_manager = RStar2AgentAsyncLLMServerManager(config, server_handles, config.actor_rollout_ref.rollout.agent.budget_coef)
 
         model_path = config.actor_rollout_ref.model.path
         self.model_name = "/".join(model_path.split("/")[-2:])

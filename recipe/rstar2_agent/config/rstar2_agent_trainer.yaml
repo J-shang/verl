@@ -28,6 +28,7 @@ actor_rollout_ref:
     agent:
       num_workers: 1
       agent_loop_config_path: recipe/rstar2_agent/config/rstar2_agent_loop.yaml
+      budget_coef: 0.7
 
 augmentation:
   do_down_sampling: False
