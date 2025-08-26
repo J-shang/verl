@@ -120,8 +120,8 @@ class RStar2AgentLoop(ToolAgentLoop):
             with simple_timer("tool_calls", metrics):
                 tool_responses = await asyncio.gather(*tasks)
             ################################### rStar ###################################
-            assert len(pending_pos) == len(tool_responses)
-            for i, tool_response in zip(pending_pos, tool_responses):
+            assert len(pending_pos[: self.max_parallel_calls]) == len(tool_responses)
+            for i, tool_response in zip(pending_pos[: self.max_parallel_calls], tool_responses):
                 total_tool_responses[i] = tool_response
             tool_responses = total_tool_responses
             #############################################################################
