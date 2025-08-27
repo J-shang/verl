@@ -158,10 +158,12 @@ def rollout_trace_op(func):
                 if hasattr(result, "prompt_ids"):
                     prompt_text = await loop.run_in_executor(None, self.tokenizer.decode, result.prompt_ids)
                     _result["prompt_text"] = prompt_text
+                    result.extra_fields["prompt_text"] = prompt_text
 
                 if hasattr(result, "response_ids"):
                     response_text = await loop.run_in_executor(None, self.tokenizer.decode, result.response_ids)
                     _result["response_text"] = response_text
+                    result.extra_fields["response_text"] = response_text
                 return _result
             return result
 
