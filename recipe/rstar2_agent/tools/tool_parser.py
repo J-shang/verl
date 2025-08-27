@@ -2,16 +2,15 @@ import asyncio
 import json
 import logging
 import os
-from abc import ABC, abstractmethod
 
 import regex as re
-from pydantic import BaseModel
 
 from verl.experimental.agent_loop.tool_parser import ToolParser, FunctionCall
 from verl.utils.rollout_trace import rollout_trace_op
 
 logger = logging.getLogger(__file__)
 logger.setLevel(os.getenv("VERL_LOGGING_LEVEL", "WARN"))
+
 
 @ToolParser.register("rstar2_agent_hermes")
 class RStar2AgentHermesToolParser(ToolParser):

@@ -35,7 +35,7 @@ def decode_prompt_response_str(data: DataProto, tokenizer) -> tuple[list[str], l
 
     for item in data:
         # Decode prompt IDs
-        if "prompt_text" in item.non_tensor_batch:
+        if "prompt_text" in item.non_tensor_batch and item.non_tensor_batch['prompt_text'] is not None:
             prompt_str = item.non_tensor_batch['prompt_text']
         else:
             prompt_ids = item.batch['prompts']
@@ -44,7 +44,7 @@ def decode_prompt_response_str(data: DataProto, tokenizer) -> tuple[list[str], l
         prompts.append(prompt_str)
 
         # Decode response IDs
-        if "response_text" in item.non_tensor_batch:
+        if "response_text" in item.non_tensor_batch and item.non_tensor_batch['response_text'] is not None:
             response_str = item.non_tensor_batch['response_text']
         else:
             response_ids = item.batch['responses']

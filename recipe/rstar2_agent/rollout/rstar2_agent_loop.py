@@ -62,7 +62,7 @@ class RStar2AgentLoop(ToolAgentLoop):
                     **self.apply_chat_template_kwargs,
                 ),
             )
-        response_mask = []
+        response_mask, response_logprobs = [], []
         tools_kwargs = kwargs.get("tools_kwargs", {})
         ################################### rStar ###################################
         history_tool_calls = []  # Keep track of all tool calls made during the conversation
@@ -71,16 +71,19 @@ class RStar2AgentLoop(ToolAgentLoop):
 
         user_turns, assistant_turns = 0, 0
         while True:
-            ################################### rStar ###################################
-            self.server_manager: RStar2AgentAsyncLLMServerManager
-            sampling_params["max_new_tokens"] = self.response_length - len(response_mask)
-            #############################################################################
             with simple_timer("generate_sequences", metrics):
-                response_ids = await self.server_manager.generate(
-                    request_id=request_id, prompt_ids=prompt_ids, sampling_params=sampling_params, image_data=image_data, budget=budget,
+                ################################### rStar ###################################
+                self.server_manager: RStar2AgentAsyncLLMServerManager
+                sampling_params["max_new_tokens"] = self.response_length - len(response_mask)
+                #############################################################################
+                output = await self.server_manager.generate(
+                    request_id=request_id, prompt_ids=prompt_ids, sampling_params=sampling_params, image_data=image_data
                 )
+            response_ids = output.token_ids
             prompt_ids += response_ids
             response_mask += [1] * len(response_ids)
+            if output.log_probs:
+                response_logprobs += output.log_probs
             assistant_turns += 1
 
             # reach max response length
@@ -122,9 +125,7 @@ class RStar2AgentLoop(ToolAgentLoop):
                 ################################### rStar ###################################
                 tools_kwargs_copy = dict(tools_kwargs)  # Copy to avoid modifying original
                 tools_kwargs_copy["history_tool_calls"] = list(history_tool_calls)  # Pass history tool calls
-                #############################################################################
                 tasks.append(self._call_tool(tool_call, tools_kwargs_copy))
-                ################################### rStar ###################################
                 history_tool_calls.append(tool_call)
                 #############################################################################
             with simple_timer("tool_calls", metrics):
@@ -212,6 +213,8 @@ class RStar2AgentLoop(ToolAgentLoop):
 
             prompt_ids += tool_response_ids
             response_mask += [0] * len(tool_response_ids)
+            if response_logprobs:
+                response_logprobs += [0.0] * len(tool_response_ids)
             user_turns += 1
 
         response_ids = prompt_ids[-len(response_mask) :]
@@ -224,6 +227,7 @@ class RStar2AgentLoop(ToolAgentLoop):
             response_ids=response_ids[: self.response_length],
             response_mask=response_mask[: self.response_length],
             multi_modal_data=multi_modal_data,
+            response_logprobs=response_logprobs[: self.response_length] if response_logprobs else None,
             num_turns=user_turns + assistant_turns + 1,
             metrics=metrics,
         )

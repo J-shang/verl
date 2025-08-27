@@ -652,8 +652,8 @@ class AgentLoopWorker:
 
         non_tensor_batch = {
             "__num_turns__": np.array([input.num_turns for input in inputs], dtype=np.int32),
-            "prompt_text": np.array([input.prompt_text for input in inputs]),
-            "response_text": np.array([input.response_text for input in inputs]),
+            "prompt_text": np.array([input.extra_fields.get("prompt_text", None) for input in inputs]),
+            "response_text": np.array([input.extra_fields.get("response_text", None) for input in inputs]),
         }
 
         # add reward_extra_info to non_tensor_batch
