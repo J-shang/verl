@@ -109,6 +109,11 @@ class AsyncLLMServerManager:
 
 
 class RStar2AgentAsyncLLMServerManager(AsyncLLMServerManager):
+    """
+    Use each server's budget more efficiently by considering the token budget for each request.
+    This is useful when the avg response length is close to the maximum response length allowed,
+    to avoid the recomputation of the prefix cache.
+    """
     def __init__(self, config: DictConfig, server_handles: list[ray.actor.ActorHandle], budget_coef: int = 1):
         self.config = config
         self.server_handles = server_handles
@@ -119,7 +124,6 @@ class RStar2AgentAsyncLLMServerManager(AsyncLLMServerManager):
         assert budget_coef > 0
         for server in server_handles:
             server_info = ray.get(server.get_scheduler_info.remote())
-            print(server_info)
             self.weighted_serveres.append([-server_info["max_total_num_tokens"] / budget_coef, (hash(server), server)])
         heapq.heapify(self.weighted_serveres)
 
@@ -380,7 +384,8 @@ class AgentLoopWorker:
             server_handles (List[ray.actor.ActorHandle]): OpenAI compatible LLM server actor handles.
         """
         self.config = config
-        self.server_manager = RStar2AgentAsyncLLMServerManager(config, server_handles, config.actor_rollout_ref.rollout.agent.get("server_budget_coef", 1))
+        self.server_manager = AsyncLLMServerManager(config, server_handles)
+        # self.server_manager = RStar2AgentAsyncLLMServerManager(config, server_handles, config.actor_rollout_ref.rollout.agent.get("server_budget_coef", 1))
 
         model_path = config.actor_rollout_ref.model.path
         self.model_name = "/".join(model_path.split("/")[-2:])

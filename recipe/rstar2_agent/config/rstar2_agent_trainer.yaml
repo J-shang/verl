@@ -9,9 +9,6 @@ defaults:
   - _self_
 
 data:
-  max_prompt_length: 1024
-  max_response_length: 1024
-  train_batch_size: 256
   return_raw_chat: True
 
 actor_rollout_ref:
@@ -24,6 +21,7 @@ actor_rollout_ref:
       enable: True
       max_assistant_turns: 5
       tool_config_path: "./config/tool_config/python_tool_config.yaml"
+      # "rstar2_agent_hermes" additionally takes the toolcall parse error as tool response.
       format: rstar2_agent_hermes
     agent:
       num_workers: 1

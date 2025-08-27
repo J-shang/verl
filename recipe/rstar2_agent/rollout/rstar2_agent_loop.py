@@ -73,7 +73,6 @@ class RStar2AgentLoop(ToolAgentLoop):
         while True:
             with simple_timer("generate_sequences", metrics):
                 ################################### rStar ###################################
-                self.server_manager: RStar2AgentAsyncLLMServerManager
                 sampling_params["max_new_tokens"] = self.response_length - len(response_mask)
                 #############################################################################
                 output = await self.server_manager.generate(
@@ -88,23 +87,23 @@ class RStar2AgentLoop(ToolAgentLoop):
 
             # reach max response length
             if len(response_mask) >= self.response_length:
-                self.server_manager._release_request(request_id, budget)
+                # self.server_manager._release_request(request_id, budget)
                 break
 
             # reach max assistant turns
             if self.max_assistant_turns and assistant_turns >= self.max_assistant_turns:
-                self.server_manager._release_request(request_id, budget)
+                # self.server_manager._release_request(request_id, budget)
                 break
 
             # reach max user turns
             if self.max_user_turns and user_turns >= self.max_user_turns:
-                self.server_manager._release_request(request_id, budget)
+                # self.server_manager._release_request(request_id, budget)
                 break
 
             # no tool calls
             _, tool_calls = await self.tool_parser.extract_tool_calls(response_ids)
             if not tool_calls:
-                self.server_manager._release_request(request_id, budget)
+                # self.server_manager._release_request(request_id, budget)
                 break
 
             ################################### rStar ###################################
@@ -137,7 +136,7 @@ class RStar2AgentLoop(ToolAgentLoop):
             tool_responses = total_tool_responses
             #############################################################################
             if any(isinstance(item, Exception) for item in tool_responses):
-                self.server_manager._release_request(request_id, budget)
+                # self.server_manager._release_request(request_id, budget)
                 break
 
             # Extract messages and update multi_modal_data
@@ -208,7 +207,7 @@ class RStar2AgentLoop(ToolAgentLoop):
             # NOTE: last turn should not be user turn, or the EOS token reward
             # can't be propagated to previous token in GAE.
             if len(response_mask) + len(tool_response_ids) >= self.response_length:
-                self.server_manager._release_request(request_id, budget)
+                # self.server_manager._release_request(request_id, budget)
                 break
 
             prompt_ids += tool_response_ids

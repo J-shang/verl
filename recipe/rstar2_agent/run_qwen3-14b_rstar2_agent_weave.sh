@@ -1,30 +1,29 @@
-# run on 8xH100
-# make sure your current working directory is the root of the project
-
 set -x
 
 ulimit -n 65535
 
-PROJECT_DIR="$(pwd)"
+SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") &>/dev/null && pwd -P)
+PROJECT_DIR=$SCRIPT_DIR/../..
 CONFIG_PATH="$PROJECT_DIR/recipe/rstar2_agent/config"
 PROJECT_NAME="rstar2-agent-test"
 EXPERIMENT_NAME="qwen3-14b-sgl-tool-agent-verify-n16"
+MODEL_PATH="$HOME/models/Qwen3-14B-Base"
 
 python3 -m recipe.rstar2_agent.main_rstar2_agent \
     --config-path="$CONFIG_PATH" \
     --config-name='rstar2_agent_trainer' \
     algorithm.adv_estimator=grpo \
-    data.train_batch_size=512 \
+    data.train_batch_size=128 \
     data.max_prompt_length=2048 \
     data.max_response_length=8192 \
     data.filter_overlong_prompts=True \
     data.truncation='error' \
     data.return_raw_chat=True \
-    actor_rollout_ref.model.path=$PROJECT_DIR/../models/0618_qwen3_14b_base_qwen_template_general_data_cc_pythonio \
+    actor_rollout_ref.model.path=$MODEL_PATH \
     actor_rollout_ref.actor.optim.lr=1e-6 \
     actor_rollout_ref.actor.optim.lr_warmup_steps=20 \
     actor_rollout_ref.model.use_remove_padding=True \
-    actor_rollout_ref.actor.ppo_mini_batch_size=512 \
+    actor_rollout_ref.actor.ppo_mini_batch_size=128 \
     actor_rollout_ref.actor.use_dynamic_bsz=True \
     actor_rollout_ref.actor.ppo_max_token_len_per_gpu=20480 \
     actor_rollout_ref.actor.use_kl_loss=False \
@@ -60,11 +59,11 @@ python3 -m recipe.rstar2_agent.main_rstar2_agent \
     trainer.project_name=$PROJECT_NAME \
     trainer.experiment_name=$EXPERIMENT_NAME \
     trainer.n_gpus_per_node=8 \
-    trainer.nnodes=4 \
+    trainer.nnodes=1 \
     trainer.save_freq=-1 \
     trainer.test_freq=5 \
     trainer.total_training_steps=200 \
-    data.train_files="['$HOME/data/rstar-agent/omr_0521_27k_int/train.parquet', '$HOME/data/rstar-agent/orz_filter_52k/train.parquet', '$HOME/data/rstar-agent/euler_600/train.parquet']" \
-    data.val_files="['$HOME/data/rstar-agent/aime2024/test.parquet', '$HOME/data/rstar-agent/math500/test.parquet']" \
+    data.train_files="['$HOME/data/rstar2-agent/dapo-math-17k-en/train.parquet']" \
+    data.val_files="['$HOME/data/rstar2-agent/aime2024/test.parquet']" \
     actor_rollout_ref.rollout.multi_turn.tool_config_path="$PROJECT_DIR/recipe/rstar2_agent/config/tool_config/python_tool_config.yaml" \
     trainer.total_epochs=15 $@ 2>&1 | tee $PROJECT_NAME-$EXPERIMENT_NAME.log
