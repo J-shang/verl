@@ -418,15 +418,16 @@ class DataParallelPPOActor(BasePPOActor):
 
                     # all return: (bsz, response_length)
                     calculate_entropy = False
-                    if entropy_coeff != 0:
+                    retain_high_entropy_token_ratio = self.config.get('retain_high_entropy_token_ratio', None)
+                    mask_low_entropy_token = retain_high_entropy_token_ratio is not None and 0 < retain_high_entropy_token_ratio < 1
+                    if entropy_coeff != 0 or mask_low_entropy_token:
                         calculate_entropy = True
                     entropy, log_prob = self._forward_micro_batch(
                         model_inputs, temperature=temperature, calculate_entropy=calculate_entropy
                     )
 
                     # Added by rStar2-agent, mask low entropy tokens, retain high entropy tokens, technology from https://arxiv.org/abs/2506.01939
-                    retain_high_entropy_token_ratio = self.config.get('retain_high_entropy_token_ratio', None)
-                    if retain_high_entropy_token_ratio is not None and retain_high_entropy_token_ratio < 1:
+                    if mask_low_entropy_token:
                         import math
                         assert retain_high_entropy_token_ratio > 0
                         with torch.no_grad():
