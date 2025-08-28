@@ -221,6 +221,7 @@ class FSDPActorConfig(ActorConfig):
     fsdp_config: FSDPEngineConfig = field(default_factory=FSDPEngineConfig)
     use_remove_padding: bool = False
     profiler: ProfilerConfig = field(default_factory=ProfilerConfig)
+    retain_high_entropy_token_ratio: float = 1.0
 
     def __post_init__(self):
         """Validate FSDP actor configuration parameters."""
