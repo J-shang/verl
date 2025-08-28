@@ -424,6 +424,20 @@ class DataParallelPPOActor(BasePPOActor):
                         model_inputs, temperature=temperature, calculate_entropy=calculate_entropy
                     )
 
+                    # Added by rStar2-agent, mask low entropy tokens, retain high entropy tokens, technology from https://arxiv.org/abs/2506.01939
+                    retain_high_entropy_token_ratio = self.config.get('retain_high_entropy_token_ratio', None)
+                    if retain_high_entropy_token_ratio is not None and retain_high_entropy_token_ratio < 1:
+                        import math
+                        assert retain_high_entropy_token_ratio > 0
+                        with torch.no_grad():
+                            for sub_idx, sub_entropy in enumerate(entropy):
+                                sub_entropy = sub_entropy * response_mask[sub_idx].to(sub_entropy)
+                                valid_number = math.floor(response_mask[sub_idx].sum().item() * retain_high_entropy_token_ratio)
+                                sub_response_mask = torch.zeros_like(response_mask[sub_idx])
+                                if valid_number > 0:
+                                    sub_response_mask[sub_entropy.topk(valid_number).indices] = True
+                                response_mask[sub_idx] = sub_response_mask
+
                     loss_mode = self.config.policy_loss.get("loss_mode", "vanilla")
                     # vanilla -> verl.trainer.ppo.core_algos.compute_policy_loss_vanilla
                     # gpg -> verl.trainer.ppo.core_algos.compute_policy_loss_gpg

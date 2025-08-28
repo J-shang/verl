@@ -193,3 +193,5 @@ profiler:
       # stop profile mini-batch in training
       step_end: null
 
+# mask low entropy tokens, retain high entropy tokens, technology from https://arxiv.org/abs/2506.01939
+retain_high_entropy_token_ratio: 1
