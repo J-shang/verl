@@ -17,5 +17,5 @@ torchdata
 torchvision
 transformers
 wandb
-sglang[all,blackwell]==0.5.1.post3
+# sglang[all,blackwell]==0.5.1.post3
 huggingface_hub
