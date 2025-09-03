@@ -68,7 +68,7 @@ class RolloutTraceConfig:
         if backend == "weave":
             import weave
 
-            config.client = weave.init(project_name)
+            config.client = weave.init(f"rstar/{project_name}")
         elif backend == "mlflow":
             import mlflow
 
