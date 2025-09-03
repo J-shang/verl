@@ -1,5 +1,5 @@
 tools:
-  - class_name: "recipe.rstar2_agent.src.tools.code_judge_tool.CodeJudgeTool"
+  - class_name: "recipe.rstar2_agent.src.tools.code_judge_tool.SimJupyterTool"
     config: 
       type: native
       request_processor_concurrency: 8

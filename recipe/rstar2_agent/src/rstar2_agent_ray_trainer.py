@@ -474,8 +474,8 @@ class RStar2AgentRayTrainer(RayPPOTrainer):
                 from .down_sample.utils import filter_by_mask
                 aime_batch = filter_by_mask(test_batch, aime_mask, 1)
                 aime_batch = aime_batch.repeat(16, interleave=True)
-                non_aime_mask = filter_by_mask(test_batch, non_aime_mask, 1)
-                test_batch = aime_batch.union(non_aime_mask)
+                non_aime_batch = filter_by_mask(test_batch, non_aime_mask, 1)
+                test_batch = DataProto.concat([aime_batch, non_aime_batch])
 
             # we only do validation on rule-based rm
             if self.config.reward_model.enable and test_batch[0].non_tensor_batch["reward_model"]["style"] == "model":
