@@ -87,5 +87,3 @@ if is_npu_available:
         device_module.synchronize()
 
     TensorDictBase._sync_all = _sync_all_patch
-
-from recipe.rstar2_agent.src import *

@@ -1,3 +1,6 @@
+# Copy math verify and prime math compute score functions from verl.utils.reward_score under this folder
+# to reduce the dependency and memory cost when fused_compute_score is used by the code judge tool.
+
 from .prime_math import compute_score as prime_compute_score
 from .math_verify import compute_score as math_verify_compute_score
 
