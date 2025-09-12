@@ -2,10 +2,10 @@
 # Licensed under the MIT license.
 
 import uuid
+from collections import defaultdict
 from copy import deepcopy
 from pprint import pprint
 
-from collections import defaultdict
 import numpy as np
 import ray
 import torch
@@ -25,8 +25,8 @@ from verl.trainer.ppo.ray_trainer import (
     compute_advantage,
     compute_response_mask,
     pad_dataproto_to_divisor,
-    unpad_dataproto,
     process_validation_metrics,
+    unpad_dataproto,
 )
 from verl.trainer.ppo.reward import compute_reward, compute_reward_async
 from verl.utils.checkpoint.checkpoint_manager import should_save_ckpt_esi
@@ -42,7 +42,9 @@ class RStar2AgentRayTrainer(RayPPOTrainer):
         do_down_sampling = self.config.augmentation.do_down_sampling
         down_sampling_config = self.config.augmentation.down_sampling_config
         world_size = self.actor_rollout_wg.world_size
-        metrics = {"down_sampling/before_sampling_trace_num": len(batch),}
+        metrics = {
+            "down_sampling/before_sampling_trace_num": len(batch),
+        }
 
         def check_batch_is_empty(batch: DataProto, down_sampling_stage: str):
             if batch is None or len(batch) == 0:
@@ -208,15 +210,19 @@ class RStar2AgentRayTrainer(RayPPOTrainer):
                             reward_tensor, reward_extra_infos_dict = compute_reward(batch, self.reward_fn)
                             batch.batch["token_level_scores"] = reward_tensor
                             if reward_extra_infos_dict:
-                                batch.non_tensor_batch.update({k: np.array(v) for k, v in reward_extra_infos_dict.items()})
+                                batch.non_tensor_batch.update(
+                                    {k: np.array(v) for k, v in reward_extra_infos_dict.items()}
+                                )
                             reward_extra_infos_dict_keys = list(reward_extra_infos_dict.keys())
 
                     ################################### rStar ###################################
                     # Need to refactor the launch_reward_fn_async to support down sampling,
                     # only forbid combine launch_reward_fn_async and down sampling for now.
                     with marked_timer("down_sample", timing_raw, color="yellow"):
-                        assert not (self.config.reward_model.launch_reward_fn_async and self.config.augmentation.do_down_sampling), \
-                            "down sampling cannot combine with async reward function for now"
+                        assert not (
+                            self.config.reward_model.launch_reward_fn_async
+                            and self.config.augmentation.do_down_sampling
+                        ), "down sampling cannot combine with async reward function for now"
                         batch, down_sampling_metrics = self._down_sample_batch(batch)
                         metrics.update(down_sampling_metrics)
                         if batch is None:
@@ -277,9 +283,13 @@ class RStar2AgentRayTrainer(RayPPOTrainer):
                             reward_tensor, reward_extra_infos_dict = ray.get(future_reward)
                             batch.batch["token_level_scores"] = reward_tensor
                             if reward_extra_infos_dict:
-                                batch.non_tensor_batch.update({k: np.array(v) for k, v in reward_extra_infos_dict.items()})
+                                batch.non_tensor_batch.update(
+                                    {k: np.array(v) for k, v in reward_extra_infos_dict.items()}
+                                )
                             reward_extra_infos_dict_keys = list(reward_extra_infos_dict.keys())
-                        reward_extra_infos_dict = {key: batch.non_tensor_batch[key].tolist() for key in reward_extra_infos_dict_keys}
+                        reward_extra_infos_dict = {
+                            key: batch.non_tensor_batch[key].tolist() for key in reward_extra_infos_dict_keys
+                        }
                         ################################################################################
 
                         # compute rewards. apply_kl_penalty if available
@@ -468,10 +478,11 @@ class RStar2AgentRayTrainer(RayPPOTrainer):
                     repeat_times=self.config.actor_rollout_ref.rollout.val_kwargs.n, interleave=True
                 )
             else:
-                data_source = test_batch.non_tensor_batch['data_source']
+                data_source = test_batch.non_tensor_batch["data_source"]
                 aime_mask = torch.tensor(["aime" in ds.lower() for ds in data_source], dtype=torch.bool)
                 non_aime_mask = torch.tensor(["aime" not in ds.lower() for ds in data_source], dtype=torch.bool)
                 from .down_sample.utils import filter_by_mask
+
                 aime_batch = filter_by_mask(test_batch, aime_mask, 1)
                 aime_batch = aime_batch.repeat(16, interleave=True)
                 non_aime_batch = filter_by_mask(test_batch, non_aime_mask, 1)

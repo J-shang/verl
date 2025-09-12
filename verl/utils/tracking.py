@@ -50,13 +50,23 @@ class Tracking:
         self.logger = {}
 
         if "tracking" in default_backend or "wandb" in default_backend:
+            import os
+
             import wandb
 
             settings = None
             if config and config["trainer"].get("wandb_proxy", None):
                 settings = wandb.Settings(https_proxy=config["trainer"]["wandb_proxy"])
-            # Set the run ID to a unique value, or the experiments on the same machine may share the same id
-            wandb.init(project=project_name, name=experiment_name, config=config, settings=settings, id=f"{project_name}--{experiment_name}", entity="rstar")
+            # Set the ID to a certain value, or the experiments on the same machine may share the same id
+            wandb_exp_id = os.environ.get("WANDB_RUN_ID", f"{project_name}--{experiment_name}")
+            wandb.init(
+                project=project_name,
+                name=experiment_name,
+                config=config,
+                settings=settings,
+                id=wandb_exp_id,
+                entity="rstar",
+            )
             self.logger["wandb"] = wandb
 
         if "trackio" in default_backend:
