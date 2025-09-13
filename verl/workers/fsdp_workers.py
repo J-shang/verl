@@ -355,6 +355,7 @@ class ActorRolloutRefWorker(Worker, DistProfilerExtension):
             for name, child in actor_module.named_modules():
                 if type(child).__name__ == "Qwen3MoeSparseMoeBlock":
                     from verl.workers.qwen_moe_modifier import moe_forward
+                    import types
                     # replace child's forward function with moe_forward defined above
                     child.forward = types.MethodType(moe_forward, child)
 
