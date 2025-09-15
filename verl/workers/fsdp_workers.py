@@ -352,6 +352,15 @@ class ActorRolloutRefWorker(Worker, DistProfilerExtension):
 
                 _apply_liger_kernel_to_instance(model=actor_module)
 
+            for name, child in actor_module.named_modules():
+                if type(child).__name__ == "Qwen3MoeSparseMoeBlock":
+                    import types
+
+                    from verl.utils.modifier import moe_forward
+
+                    # replace child's forward function with moe_forward defined above
+                    child.forward = types.MethodType(moe_forward, child)
+
             fused_kernel_options = self.config.model.get("fused_kernel_options", None)
             fused_kernels_backend = (
                 fused_kernel_options.get("impl_backend", None) if fused_kernel_options is not None else None
