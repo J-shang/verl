@@ -232,10 +232,10 @@ def nnscaler_moe_gmm(
 
     permuted_inputs, row_id_map = permute(local_hidden_states, local_idx)
 
-    fc1_output = gmm(permuted_inputs, gate_projs, tokens_per_expert, trans_b=True)
-    fc2_output = gmm(permuted_inputs, up_projs, tokens_per_expert, trans_b=True)
+    fc1_output = gmm(permuted_inputs, gate_projs, tokens_per_expert)
+    fc2_output = gmm(permuted_inputs, up_projs, tokens_per_expert)
     intermediate_parallel = torch.nn.functional.silu(fc1_output) * fc2_output
-    expert_outs = gmm(intermediate_parallel, down_projs, tokens_per_expert, trans_b=True)
+    expert_outs = gmm(intermediate_parallel, down_projs, tokens_per_expert)
 
     y = unpermute(expert_outs, row_id_map)
     y = y * local_prob
