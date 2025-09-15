@@ -228,7 +228,7 @@ def nnscaler_moe_gmm(
         tokens_per_expert = torch.histc(
             local_idx, bins=local_expert_end - local_expert_start, min=local_expert_start, max=local_expert_end - 1
         )
-        tokens_per_expert = tokens_per_expert.cpu().to(torch.long)
+        tokens_per_expert = tokens_per_expert.to(torch.long).to(gate_projs.device)
 
     permuted_inputs, row_id_map = permute(local_hidden_states, local_idx)
 
